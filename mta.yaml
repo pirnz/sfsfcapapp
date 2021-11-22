@@ -1,0 +1,167 @@
+_schema-version: '3.2'
+ID: sfsfcapapp
+version: 0.0.1
+
+parameters:
+  enable-parallel-deployments: true
+  deploy_mode: html5-repo
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm install --production
+        - npx -p @sap/cds-dk cds build --production
+
+modules:
+
+  # --------------------- SERVER MODULE ------------------------
+  - name: sfsfcapapp-srv
+  # ------------------------------------------------------------
+    type: nodejs
+    path: gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 512M
+      disk-quota: 1024M
+    properties:
+      ApplicationInterfaceKey: saptest0
+      APIKeyHubSandbox: MINO4cDjctG9Ou1fvK6c7FfQJLEFWlVD
+    requires:
+      - name: sfsfcapapp-uaa
+      - name: sfsfcapapp-dest
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+
+
+
+  # ----------- HTML5 APP REPOSITORY APP HTML5 MODULE ----------
+  - name: sfsfcapapp-html5
+  # ------------------------------------------------------------
+    type: html5
+    path: app/html5
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm install
+        - npm run build:cf
+      supported-platforms: []
+
+
+  # ----------- HTML5 APP REPOSITORY DEPLOYER MODULE -----------
+  - name: sfsfcapapp-ui-deployer
+  # ------------------------------------------------------------
+    type: com.sap.application.content
+    path: .
+    requires:
+      - name: sfsfcapapp-html5repo
+        parameters:
+          content-target: true
+    build-parameters:
+      build-result: gen/app
+      requires:
+        - artifacts:
+            - html5-content.zip
+          name: sfsfcapapp-html5
+          target-path: gen/app
+
+  # ----- HTML5 APP REPOSITORY DESTINATION CONTENT MODULE ------
+  - name: sfsfcapapp-dest-content
+  # ------------------------------------------------------------
+    type: com.sap.application.content
+    requires:
+      - name: sfsfcapapp-uaa
+        parameters:
+          service-key:
+            name: sfsfcapapp-uaa-sk
+      - name: sfsfcapapp-dest
+        parameters:
+          content-target: true
+      - name: sfsfcapapp-html5repo
+        parameters:
+          service-key:
+            name: sfsfcapapp-html5repo-sk
+    parameters:
+      content:
+        instance:
+          existing_destinations_policy: update
+          destinations:
+            - Name: sfsfcapapp-service-sfsfcapapp-uaa
+              ServiceInstanceName: sfsfcapapp-uaa
+              ServiceKeyName: sfsfcapapp-uaa-sk
+              Authentication: OAuth2UserTokenExchange
+              sap.cloud.service: sfsfcapapp-service
+            - Name: sfsfcapapp-service-sfsfcapapp-html5repo
+              ServiceInstanceName: sfsfcapapp-html5repo
+              ServiceKeyName: sfsfcapapp-html5repo-sk
+              sap.cloud.service: sfsfcapapp-service
+    build-parameters:
+      no-source: true
+
+resources:
+  # ----------------------- UAA SERVICE ------------------------
+  - name: sfsfcapapp-uaa
+  # ------------------------------------------------------------
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+
+  # -------------------- DESTINATION SERVICE -------------------
+  - name: sfsfcapapp-dest
+  # ------------------------------------------------------------
+    type: org.cloudfoundry.managed-service
+    requires:
+      - name: srv-api
+    parameters:
+      service: destination
+      service-plan: lite
+      config:
+        HTML5Runtime_enabled: true
+        init_data:
+          instance:
+            existing_destinations_policy: update
+            destinations:
+              - Name: sfsfcapapp-srv
+                Description: SFSF CAP app - Server Module
+                URL: ~{srv-api/srv-url}
+                Type: HTTP
+                ProxyType: Internet
+                Authentication: NoAuthentication
+                HTML5.DynamicDestination: true
+                HTML5.ForwardAuthToken: true
+              - Name: ui5
+                Description: SAPUI5
+                URL: https://ui5.sap.com
+                Type: HTTP
+                ProxyType: Internet
+                Authentication: NoAuthentication
+
+  # ----------- HTML5 APP REPOSITORY HOSTING SERVICE -----------
+  - name: sfsfcapapp-html5repo
+  # ------------------------------------------------------------
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+
+
+  # ----------------- SUCCESSFACTORS API SERVICE ---------------
+  - name: sfsfcapapp-sf-api
+  # ------------------------------------------------------------
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: sap-successfactors-extensibility
+      service-plan: api-access
+      config:
+        systemName: SFSF_SFEDU021104
+
+
+
+
+
+
