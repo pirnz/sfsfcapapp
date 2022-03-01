@@ -13,15 +13,16 @@
     "@sap/xsenv": "^3",
     "@sap/xssec": "^3",
     "passport": "^0.4.1",
-
     "debug": "^4.3",
     "express": "^4"
   },
   "devDependencies": {
+    "@sap/ux-specification": "^1.90.14",
     "sqlite3": "^5"
   },
   "scripts": {
-    "start": "npx cds run"
+    "start": "npx cds run",
+    "undeploy": "cf undeploy sfsfcapapp --delete-services --delete-service-keys"
   },
   "cds": {
     "requires": {
@@ -53,10 +54,9 @@
             }
           }
         }
-      }
-      ,
+      },
       "RCMCandidate": {
-        "kind": "odata",
+        "kind": "odata-v2",
         "model": "srv/external/RCMCandidate",
         "credentials": {
           "[production]": {
@@ -68,6 +68,9 @@
           }
         }
       }
-      }
-  }
+    }
+  },
+  "sapux": [
+    "app/candidate-view"
+  ]
 }

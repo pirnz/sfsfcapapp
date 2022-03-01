@@ -1,17 +1,10 @@
 const debug = require('debug')('srv:catalog-service');
 
 module.exports = cds.service.impl(async function () {
-
     const sfrcm = await cds.connect.to('RCMCandidate');
-
     const {
             Candidates
           } = this.entities;
-
-
-
-
-
 
     this.on('READ', Candidates, async (req) => {
         try {
@@ -27,14 +20,6 @@ module.exports = cds.service.impl(async function () {
             req.reject(err);
         }
     });
-
-
-
-
-
-
-
-
 
     this.on('userInfo', req => {
         let results = {};

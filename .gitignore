@@ -19,3 +19,5 @@ _out
 .che/
 .gen/
 .DS_Store
+# auto generated wildcard
+.env1

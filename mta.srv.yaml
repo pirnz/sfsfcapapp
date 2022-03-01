@@ -1,0 +1,69 @@
+_schema-version: "3.2"
+ID: sfsfcapapp
+version: 0.0.1
+modules:
+- name: sfsfcapapp-srv
+  type: nodejs
+  path: gen/srv
+  properties:
+    APIKeyHubSandbox: MINO4cDjctG9Ou1fvK6c7FfQJLEFWlVD
+    ApplicationInterfaceKey: saptest0
+  requires:
+  - name: sfsfcapapp-uaa
+  - name: sfsfcapapp-dest
+  provides:
+  - name: srv-api
+    properties:
+      srv-url: ${default-url}
+  parameters:
+    buildpack: nodejs_buildpack
+    disk-quota: 1024M
+    memory: 512M
+resources:
+- name: sfsfcapapp-uaa
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./xs-security.json
+    service: xsuaa
+    service-plan: application
+- name: sfsfcapapp-dest
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      init_data:
+        instance:
+          destinations:
+          - Authentication: NoAuthentication
+            Name: ui5
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://ui5.sap.com
+          existing_destinations_policy: update
+        subaccount:
+          existing_destinations_policy: update
+          destinations:
+          - Name: sfsfcapapp-srv
+            Description: CAP sample service
+            Authentication: NoAuthentication
+            ProxyType: Internet
+            Type: HTTP
+            URL: ~{srv-api/srv-url}
+            HTML5.DynamicDestination: true
+            HTML5.ForwardAuthToken: true
+            WebIDEEnabled: true
+            WebIDEUsage: odata_gen
+      version: 1.0.0
+    service: destination
+    service-plan: lite
+  requires:
+  - name: srv-api
+parameters:
+  deploy_mode: html5-repo
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+  - builder: custom
+    commands:
+    - npm install --production
+    - npx -p @sap/cds-dk cds build --production
