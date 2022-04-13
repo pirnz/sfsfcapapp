@@ -1,7 +1,7 @@
 {
-    "_version": "",
+    "_version": "1.38.0",
     "sap.cloud": {
-        "service": "sfsfcapapp-service"
+        "service": "sfsfcapapp.service"
     },
     "sap.app": {
         "id": "sfsfcapapp-html5",
@@ -12,5 +12,21 @@
         "title": "SFSF CAP app HTML5",
         "description": "CAP Business Application HTML5",
         "offline": false
+    },
+    "sap.ui": {
+        "technology": "UI5",
+        "icons": {
+            "icon": "",
+            "favIcon": "",
+            "phone": "",
+            "phone@2": "",
+            "tablet": "",
+            "tablet@2": ""
+        },
+        "deviceTypes": {
+            "desktop": true,
+            "tablet": true,
+            "phone": true
+        }
     }
 }

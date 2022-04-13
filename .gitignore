@@ -21,3 +21,4 @@ _out
 .DS_Store
 # auto generated wildcard
 .env1
+*.mta
