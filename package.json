@@ -4,9 +4,6 @@
   "repository": "<Add your repository here>",
   "license": "UNLICENSED",
   "description": "CAP Business Application",
-  "engines": {
-    "node": "12.x"
-  },
   "dependencies": {
     "@sap/cds": "^5",
     "@sap/audit-logging": "^5",
